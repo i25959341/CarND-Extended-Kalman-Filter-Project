@@ -64,6 +64,12 @@ public:
    */
   void UpdateEKF(const Eigen::VectorXd &z);
 
+  /**
+   * Compute the H Jacobian Matrix
+   * @param x The state at k+1
+   */
+  MatrixXd CalculateJacobianH(const VectorXd& x_state);
+
 };
 
 #endif /* KALMAN_FILTER_H_ */
