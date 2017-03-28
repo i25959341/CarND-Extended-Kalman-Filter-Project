@@ -1,6 +1,7 @@
 #ifndef KALMAN_FILTER_H_
 #define KALMAN_FILTER_H_
 #include "Eigen/Dense"
+#include <iostream>
 
 class KalmanFilter {
 public:
@@ -64,11 +65,6 @@ public:
    */
   void UpdateEKF(const Eigen::VectorXd &z);
 
-  /**
-   * Compute the H Jacobian Matrix
-   * @param x The state at k+1
-   */
-  MatrixXd CalculateJacobianH(const VectorXd& x_state);
 
 };
 

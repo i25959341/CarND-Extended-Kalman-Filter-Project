@@ -3,6 +3,8 @@
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
+using namespace std;
+
 KalmanFilter::KalmanFilter() {}
 
 KalmanFilter::~KalmanFilter() {}
@@ -28,10 +30,6 @@ void KalmanFilter::Predict() {
 }
 
 void KalmanFilter::Update(const VectorXd &z) {
-  /**
-  TODO:
-    * update the state by using Kalman Filter equations
-  */
   VectorXd z_pred = H_ * x_;
 	VectorXd y = z - z_pred;
 	MatrixXd Ht = H_.transpose();
@@ -48,16 +46,33 @@ void KalmanFilter::Update(const VectorXd &z) {
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
-  /**
-  TODO:
-    * update the state by using Extended Kalman Filter equations
-  */
-  MatrixXd Hj = CalculateJacobianH(x_);
-  VectorXd z_pred = H_ * x_;
-	VectorXd y = z - z_pred;
+  double r = sqrt(pow(x[0],2)+pow(x[1],2)):
+  double theta ;
+  double r_dot;
 
-	MatrixXd Ht = Hj.transpose();
-	MatrixXd S = Hj * P_ * Ht + R_;
+  double pi = atan(1)*4;
+
+  if (fabs(r > 0.0001)) {
+    theta = atan(x_[1] / x_[0]);
+    r_dot = ((x_[0] * x_[2] + x_[1] * x_[3]) / r);
+  } else {
+    theta = 0;
+    r_dot = 0;
+  }
+
+  if (theta > pi){
+      theta = theta - 2*pi;
+  }else if(theta<=-pi){
+    theta = theta + 2*pi;
+  }
+
+
+  VectorXd z_pred(3,1);
+  z_pred << r, theta, r_dot;
+
+  VectorXd y = z - z_pred;
+  MatrixXd Ht = H_.transpose();
+	MatrixXd S = H_ * P_ * Ht + R_;
 	MatrixXd Si = S.inverse();
 	MatrixXd PHt = P_ * Ht;
 	MatrixXd K = PHt * Si;
@@ -66,34 +81,5 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
 	x_ = x_ + (K * y);
 	long x_size = x_.size();
 	MatrixXd I = MatrixXd::Identity(x_size, x_size);
-	P_ = (I - K * Ht) * P_;
-
-}
-
-MatrixXd KalmanFilter::CalculateJacobianH(const VectorXd& x_state){
-  MatrixXd Hj(3,4);
-	//recover state parameters
-	float px = x_state(0);
-	float py = x_state(1);
-	float vx = x_state(2);
-	float vy = x_state(3);
-
-  //pre-compute a set of terms to avoid repeated calculation
-	float c1 = px*px+py*py;
-	float c2 = sqrt(c1);
-	float c3 = (c1*c2);
-
-  //check division by zero
-	if(fabs(c1) < 0.0001){
-		cout << "CalculateJacobian () - Error - Division by Zero" << endl;
-		return Hj;
-	}
-
-  //compute the Jacobian matrix
-	Hj << (px/c2), (py/c2), 0, 0,
-		  -(py/c1), (px/c1), 0, 0,
-		  py*(vx*py - vy*px)/c3, px*(px*vy - py*vx)/c3, px/c2, py/c2;
-
-	return Hj;
-
+	P_ = (I - K * H_) * P_;
 }
