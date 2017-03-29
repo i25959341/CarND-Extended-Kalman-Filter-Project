@@ -32,6 +32,7 @@ void KalmanFilter::Predict() {
 void KalmanFilter::Update(const VectorXd &z) {
   VectorXd z_pred = H_ * x_;
 	VectorXd y = z - z_pred;
+
 	MatrixXd Ht = H_.transpose();
 	MatrixXd S = H_ * P_ * Ht + R_;
 	MatrixXd Si = S.inverse();
@@ -52,7 +53,7 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
 
   double pi = atan(1)*4;
 
-  if (fabs(r > 0.0001)) {
+  if (fabs(r > 0.001)) {
     theta = atan(x_[1] / x_[0]);
     r_dot = ((x_[0] * x_[2] + x_[1] * x_[3]) / r);
   } else {
@@ -61,9 +62,9 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   }
 
   if (theta > pi){
-      theta = theta - 2*pi;
+    theta = theta - 2.0*pi;
   }else if(theta<=-pi){
-    theta = theta + 2*pi;
+    theta = theta + 2.0*pi;
   }
 
 

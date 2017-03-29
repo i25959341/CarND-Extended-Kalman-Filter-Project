@@ -49,6 +49,11 @@ private:
 
   float noise_ax;
 	float noise_ay;
+
+  float dt ;
+  float dt_2 ;
+	float dt_3 ;
+	float dt_4 ;
 };
 
 #endif /* FusionEKF_H_ */
