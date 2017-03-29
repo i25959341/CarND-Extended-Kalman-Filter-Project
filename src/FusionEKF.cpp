@@ -18,80 +18,49 @@ FusionEKF::FusionEKF() {
   // initializing matrices
   R_laser_ = MatrixXd(2, 2);
   R_radar_ = MatrixXd(3, 3);
-  H_laser_ = MatrixXd(2, 4);
-  Hj_ = MatrixXd(3, 4);
+
 
   //measurement covariance matrix - laser
   R_laser_ << 0.0225, 0,
-        0, 0.0225;
+              0, 0.0225;
 
   //measurement covariance matrix - radar
   R_radar_ << 0.09, 0, 0,
-        0, 0.0009, 0,
-        0, 0, 0.09;
+              0, 0.0009, 0,
+              0, 0, 0.09;
 
-  /**
-  TODO:
-    * Finish initializing the FusionEKF.
-    * Set the process and measurement noises
-  */
   //state covariance matrix P
-	kf_.P_ = MatrixXd(4, 4);
-	kf_.P_ << 1, 0, 0, 0,
-			     0, 1, 0, 0,
-			     0, 0, 1000, 0,
-			     0, 0, 0, 1000;
+	ekf_.P_ = MatrixXd(4, 4);
+	ekf_.P_ << 1, 0, 0, 0,
+			       0, 1, 0, 0,
+			       0, 0, 1000, 0,
+			       0, 0, 0, 1000;
   //measurement matrix
-	kf_.H_ = MatrixXd(2, 4);
-	kf_.H_ << 1, 0, 0, 0,
-			      0, 1, 0, 0;
+	H_laser_ = MatrixXd(2, 4);
+	H_laser_ << 1, 0, 0, 0,
+			        0, 1, 0, 0;
+  Hj_ = MatrixXd(3, 4);
+              // Radar measurement matrix
+  Hj_ << 1, 1, 0, 0,
+         1, 1, 0, 0,
+         1, 1, 1, 1;
 
   //the initial transition matrix F_
-	kf_.F_ = MatrixXd(4, 4);
-	kf_.F_ << 1, 0, 1, 0,
-			      0, 1, 0, 1,
-			      0, 0, 1, 0,
-			      0, 0, 0, 1;
+	ekf_.F_ = MatrixXd(4, 4);
+	ekf_.F_ << 1, 0, 1, 0,
+			       0, 1, 0, 1,
+			       0, 0, 1, 0,
+			       0, 0, 0, 1;
 
   //set the acceleration noise components
 	noise_ax = 9;
 	noise_ay = 9;
-
-
 }
 
 /**
 * Destructor.
 */
 FusionEKF::~FusionEKF() {}
-
-MatrixXd FusionEKF::CalculateJacobian(const VectorXd& x_state) {
-
-	MatrixXd Hj(3,4);
-	//recover state parameters
-	float px = x_state(0);
-	float py = x_state(1);
-	float vx = x_state(2);
-	float vy = x_state(3);
-
-	//pre-compute a set of terms to avoid repeated calculation
-	float c1 = px*px+py*py;
-	float c2 = sqrt(c1);
-	float c3 = (c1*c2);
-
-	//check division by zero
-	if(fabs(c1) < 0.0001){
-		cout << "CalculateJacobian () - Error - Division by Zero" << endl;
-		return Hj;
-	}
-
-	//compute the Jacobian matrix
-	Hj << (px/c2), (py/c2), 0, 0,
-		  -(py/c1), (px/c1), 0, 0,
-		  py*(vx*py - vy*px)/c3, px*(px*vy - py*vx)/c3, px/c2, py/c2;
-
-	return Hj;
-}
 
 void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   /*****************************************************************************
@@ -163,15 +132,9 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    *  Update
    ****************************************************************************/
 
-  /**
-   TODO:
-     * Use the sensor type to perform the update step.
-     * Update the state and covariance matrices.
-   */
-
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
     // Radar updates
-    Hj_ = CalculateJacobian(ekf_.x_);
+    Hj_ = tools.CalculateJacobian(ekf_.x_);
     ekf_.H_ = Hj_;
     ekf_.R_ = R_radar_;
     ekf_.UpdateEKF(measurement_pack.raw_measurements_);
@@ -181,7 +144,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     ekf_.R_ = R_laser_;
     ekf_.Update(measurement_pack.raw_measurements_);
   }
-  ekf_.Update(measurement_pack.raw_measurements_);
 
   // print the output
   cout << "x_ = " << ekf_.x_ << endl;

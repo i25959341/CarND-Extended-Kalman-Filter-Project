@@ -26,7 +26,7 @@ public:
   */
   void ProcessMeasurement(const MeasurementPackage &measurement_pack);
 
-  MatrixXd CalculateJacobian(const VectorXd& x_state);
+  Eigen::MatrixXd CalculateJacobian(const Eigen::VectorXd& x_state);
 
   /**
   * Kalman Filter update and prediction math lives in here.

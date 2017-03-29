@@ -46,7 +46,7 @@ void KalmanFilter::Update(const VectorXd &z) {
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
-  double r = sqrt(pow(x[0],2)+pow(x[1],2)):
+  double r = sqrt(pow(x_[0],2)+pow(x_[1],2));
   double theta ;
   double r_dot;
 
